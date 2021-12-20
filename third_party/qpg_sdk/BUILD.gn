@@ -33,9 +33,8 @@ group("qpg_sdk") {
 
 config("qpg_freertos_config") {
   include_dirs = [
-    "${chip_root}/third_party/qpg_sdk/repo/${qpg_target_ic}/comps/gpFreeRTOS/config",
-
-    #    "${chip_root}/third_party/qpg_sdk/repo/qpg6105/comps/gpFreeRTOS/config",
+    "${qpg_sdk_root}/${qpg_target_ic}/comps/gpFreeRTOS/config",
+    "${chip_root}/third_party/qpg_sdk/repo/${qpg_target_ic}/comps/lwip",
     "${freertos_root}/repo/portable/GCC/ARM_CM3",
   ]
 }
