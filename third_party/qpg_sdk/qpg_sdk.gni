@@ -22,6 +22,11 @@ declare_args() {
   # Location of the QPG SDK.
   qpg_sdk_root = "${chip_root}/third_party/qpg_sdk/repo"
 
+  # subdirectory in qpg_sdk_root where the binary library builds (.a) are to be found
+  # for connectedhomeip-qpg: Binaries (default)
+  # for matter endnodes sdk: Work
+  qpg_sdk_lib_dir = "Binaries"
+
   # Target IC for QPG SDK
   qpg_target_ic = "qpg6100"
 }
@@ -68,9 +73,9 @@ template("qpg_sdk") {
     lib_dirs = []
 
     libs += [
-      "${qpg_sdk_root}/Work/MatterQorvoGlue_${qpg_target_ic}_libbuild/libMatterQorvoGlue_${qpg_target_ic}_libbuild.a",
-      "${qpg_sdk_root}/Work/QorvoStack_${qpg_target_ic}/libQorvoStack_${qpg_target_ic}.a",
-      "${qpg_sdk_root}/Work/mbedtls_alt_${qpg_target_ic}/libmbedtls_alt_${qpg_target_ic}.a",
+      "${qpg_sdk_root}/${qpg_sdk_lib_dir}/MatterQorvoGlue_${qpg_target_ic}_libbuild/libMatterQorvoGlue_${qpg_target_ic}_libbuild.a",
+      "${qpg_sdk_root}/${qpg_sdk_lib_dir}/QorvoStack_${qpg_target_ic}/libQorvoStack_${qpg_target_ic}.a",
+      "${qpg_sdk_root}/${qpg_sdk_lib_dir}/mbedtls_alt_${qpg_target_ic}/libmbedtls_alt_${qpg_target_ic}.a",
     ]
 
     #MBed TLS built from third_party/mbedtls tree - OT config not used
