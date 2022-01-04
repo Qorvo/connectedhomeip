@@ -29,6 +29,7 @@ declare_args() {
 
   # Target IC for QPG SDK
   qpg_target_ic = "qpg6100"
+  qpg_sdk_include_platform_libs = true
 }
 
 assert(qpg_sdk_root != "", "qpg_sdk_root must be specified")
@@ -72,11 +73,13 @@ template("qpg_sdk") {
 
     lib_dirs = []
 
-    libs += [
-      "${qpg_sdk_root}/${qpg_sdk_lib_dir}/MatterQorvoGlue_${qpg_target_ic}_libbuild/libMatterQorvoGlue_${qpg_target_ic}_libbuild.a",
-      "${qpg_sdk_root}/${qpg_sdk_lib_dir}/QorvoStack_${qpg_target_ic}/libQorvoStack_${qpg_target_ic}.a",
-      "${qpg_sdk_root}/${qpg_sdk_lib_dir}/mbedtls_alt_${qpg_target_ic}/libmbedtls_alt_${qpg_target_ic}.a",
-    ]
+    if (qpg_sdk_include_platform_libs) {
+      libs += [
+        "${qpg_sdk_root}/${qpg_sdk_lib_dir}/MatterQorvoGlue_${qpg_target_ic}_libbuild/libMatterQorvoGlue_${qpg_target_ic}_libbuild.a",
+        "${qpg_sdk_root}/${qpg_sdk_lib_dir}/QorvoStack_${qpg_target_ic}/libQorvoStack_${qpg_target_ic}.a",
+        "${qpg_sdk_root}/${qpg_sdk_lib_dir}/mbedtls_alt_${qpg_target_ic}/libmbedtls_alt_${qpg_target_ic}.a",
+      ]
+    }
 
     #MBed TLS built from third_party/mbedtls tree - OT config not used
     defines = [
@@ -184,12 +187,12 @@ template("qpg_sdk") {
       "${chip_root}/third_party/mbedtls/repo/library/xtea.c",
       "${qpg_sdk_root}/Applications/Matter/shared/config/inc/FreeRTOSConfig.h",
       "${qpg_sdk_root}/Applications/Matter/shared/config/src/hooks.c",
-      "${qpg_sdk_root}/Libraries/Qorvo/mbedtls_alt/inc/${qpg_target_ic}-mbedtls-config.h",
       "${qpg_sdk_root}/Components/ThirdParty/Silex/cryptosoc/mbedtls_alt/aes_alt.h",
       "${qpg_sdk_root}/Components/ThirdParty/Silex/cryptosoc/mbedtls_alt/ccm_alt.h",
       "${qpg_sdk_root}/Components/ThirdParty/Silex/cryptosoc/mbedtls_alt/ecjpake_alt.h",
       "${qpg_sdk_root}/Components/ThirdParty/Silex/cryptosoc/mbedtls_alt/ecp_alt.h",
       "${qpg_sdk_root}/Components/ThirdParty/Silex/cryptosoc/mbedtls_alt/sha256_alt.h",
+      "${qpg_sdk_root}/Libraries/Qorvo/mbedtls_alt/inc/${qpg_target_ic}-mbedtls-config.h",
       "${qpg_sdk_root}/Libraries/Qorvo/mbedtls_alt/src/trng.c",
 
       # mbedtls_hardware_poll
