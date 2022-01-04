@@ -64,7 +64,6 @@ template("qpg_sdk") {
 
     include_dirs += [
       "${qpg_sdk_root}/Components/Qorvo/Matter/qvCHIP/inc",
-      "${qpg_sdk_root}/Components/Qorvo/OS/gpFreeRTOS/config",
       "${qpg_sdk_root}/Libraries/Qorvo/mbedtls_alt/inc",
       "${qpg_sdk_root}/Components/ThirdParty/Silex/cryptosoc/mbedtls_alt",
       "${mbedtls_root}/repo/include",
