@@ -64,6 +64,7 @@ template("qpg_sdk") {
 
     include_dirs += [
       "${qpg_sdk_root}/Components/Qorvo/Matter/qvCHIP/inc",
+      "${qpg_sdk_root}/Components/Qorvo/BSP/qvIO/inc",
       "${qpg_sdk_root}/Libraries/Qorvo/mbedtls_alt/inc",
       "${qpg_sdk_root}/Components/ThirdParty/Silex/cryptosoc/mbedtls_alt",
       "${mbedtls_root}/repo/include",
@@ -196,6 +197,7 @@ template("qpg_sdk") {
 
       # mbedtls_hardware_poll
       "${qpg_sdk_root}/Components/Qorvo/Matter/qvCHIP/inc/qvCHIP.h",
+      "${qpg_sdk_root}/Components/Qorvo/BSP/qvIO/inc/qvIO.h",
     ]
 
     if (defined(invoker.sources)) {
