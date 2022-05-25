@@ -119,6 +119,14 @@ template("qpg_executable") {
                       "--out_file",
                       "${out_dir}/${invoker.output_name}.ota",
                     ]),
+        string_join("=",
+                    [
+                      "--pem_file_path",
+                      rebase_path(qpg_sdk_root, root_build_dir) +
+                          "/Tools/ota/example_private_key.pem.example",
+                    ]),
+        "--pem_password=test1234",
+        "--sign",
       ]
       deps = [ ":$executable_target_name" ]
     }

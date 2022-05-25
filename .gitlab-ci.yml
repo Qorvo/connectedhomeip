@@ -1,0 +1,68 @@
+
+stages:
+  - build
+
+build-chip-apps-job:       
+  image: connectedhomeip/chip-build-crosscompile:latest
+  tags:
+    - ede-wcon
+  stage: build
+  only:
+    - triggers
+  script:
+    - git clean -f -fd -fx
+    - rm -rf third_party/qpg_sdk/repo # remove after previous run
+    - git submodule update --init --recursive -f
+    - source scripts/activate.sh
+    - cp -r /usr/include/readline/ /opt/ubuntu-21.04-aarch64-sysroot/usr/include/ # hack until docker image will be updated with libreadline-dev
+    - ln -sf /opt/ubuntu-21.04-aarch64-sysroot/lib/aarch64-linux-gnu/libreadline.so.8 /opt/ubuntu-21.04-aarch64-sysroot/lib/aarch64-linux-gnu/libreadline.so
+    - ln -sf /opt/ubuntu-21.04-aarch64-sysroot/usr/lib/aarch64-linux-gnu/libreadline.so.8 /opt/ubuntu-21.04-aarch64-sysroot/usr/lib/aarch64-linux-gnu/libreadline.so
+    - ./scripts/build/build_examples.py --target linux-arm64-ota-provider-ipv6only-no-ble build
+    - ./scripts/build/build_examples.py --target linux-arm64-chip-tool-ipv6only build
+    - ./scripts/build/build_examples.py --target linux-arm64-all-clusters-ipv6only build
+    - ./scripts/build/build_examples.py --target linux-x64-ota-provider-ipv6only-no-ble build
+    - ./scripts/build/build_examples.py --target linux-x64-chip-tool-ipv6only build
+    - ./scripts/build/build_examples.py --target linux-x64-all-clusters-ipv6only build
+    - mkdir x64 arm64
+    - cp out/linux-arm64-chip-tool-ipv6only/chip-tool ./arm64/
+    - cp out/linux-arm64-ota-provider-ipv6only-no-ble/chip-ota-provider-app ./arm64/
+    - cp out/linux-arm64-all-clusters-ipv6only/chip-all-clusters-app ./arm64/
+    - cp out/linux-x64-chip-tool-ipv6only/chip-tool ./x64/
+    - cp out/linux-x64-ota-provider-ipv6only-no-ble/chip-ota-provider-app ./x64/
+    - cp out/linux-x64-all-clusters-ipv6only/chip-all-clusters-app ./x64/
+
+  artifacts:
+    paths:
+      - "x64"
+      - "arm64"
+    expire_in: 2 days
+
+
+build-qpg-app:
+  image: connectedhomeip/chip-build-crosscompile:latest
+  tags:
+    - ede-wcon
+  stage: build
+  only:
+    - triggers
+  script:
+    - git clean -f -fd -fx
+    - rm -rf third_party/qpg_sdk/repo # remove after previous run
+    - git submodule update --init --recursive -f
+    - source scripts/activate.sh
+    - rm -rf third_party/qpg_sdk/repo # remove after activate
+    - git clone --single-branch --branch vlatest --depth 1 https://gitlab-ci-token:$P236_qvCHIP_API_TOKEN@itgitlab.corp.qorvo.com/wcon/lps_sw/P236_qvCHIP.git third_party/qpg_sdk/repo
+    - ./scripts/build/build_examples.py --target qpg-light build
+    - ./scripts/build/build_examples.py --target qpg-lock build
+    - ./scripts/build/build_examples.py --target qpg-shell build
+    - cp out/qpg-light/chip-*.hex .
+    - cp out/qpg-light/chip-*.ota . || true
+    - cp out/qpg-lock/chip-*.hex .
+    - cp out/qpg-lock/chip-*.ota . || true
+    - cp out/qpg-shell/chip-*.hex .
+
+  artifacts:
+    paths:
+      - "chip-*.hex"
+      - "chip-*.ota"
+    expire_in: 2 days
