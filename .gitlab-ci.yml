@@ -11,7 +11,8 @@ build-chip-apps-job:
   script:
     - git clean -f -fd -fx
     - rm -rf third_party/qpg_sdk/repo # remove after previous run
-    - git submodule update --init --recursive -f
+    - git -c submodule."cyw30739_sdk/30739A0".update=none -c submodule."cyw30739_sdk/target".update=none -c submodule."third_party/openthread/ot-ifx".update=none submodule update --init
+    # - git submodule update --init --recursive -f
     - source scripts/activate.sh
     - cp -r /usr/include/readline/ /opt/ubuntu-21.04-aarch64-sysroot/usr/include/ # hack until docker image will be updated with libreadline-dev
     - ln -sf /opt/ubuntu-21.04-aarch64-sysroot/lib/aarch64-linux-gnu/libreadline.so.8 /opt/ubuntu-21.04-aarch64-sysroot/lib/aarch64-linux-gnu/libreadline.so
@@ -47,7 +48,8 @@ build-qpg-app:
   script:
     - git clean -f -fd -fx
     - rm -rf third_party/qpg_sdk/repo # remove after previous run
-    - git submodule update --init --recursive -f
+    - git -c submodule."cyw30739_sdk/30739A0".update=none -c submodule."cyw30739_sdk/target".update=none -c submodule."third_party/openthread/ot-ifx".update=none submodule update --init
+    # - git submodule update --init --recursive -f
     - source scripts/activate.sh
     - rm -rf third_party/qpg_sdk/repo # remove after activate
     # - git clone --single-branch --branch pre_sve_2_10_3_cand --depth 1 https://gitlab-ci-token:$P236_qvCHIP_API_TOKEN@itgitlab.corp.qorvo.com/wcon/lps_sw/P236_qvCHIP.git third_party/qpg_sdk/repo
