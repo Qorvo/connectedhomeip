@@ -28,6 +28,7 @@
 #include <app-common/zap-generated/attribute-id.h>
 #include <app-common/zap-generated/attribute-type.h>
 #include <app-common/zap-generated/cluster-id.h>
+#include <app-common/zap-generated/attributes/Accessors.h>
 #include <app/server/Dnssd.h>
 #include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
@@ -538,15 +539,14 @@ void AppTask::DispatchEvent(AppEvent * aEvent)
  */
 void AppTask::UpdateClusterState(void)
 {
-    uint8_t newValue = !BoltLockMgr().IsUnlocked();
+    using namespace chip::app::Clusters;
+    auto newValue = BoltLockMgr().IsUnlocked() ? DoorLock::DlLockState::kUnlocked : DoorLock::DlLockState::kLocked;
 
     ChipLogProgress(NotSpecified, "UpdateClusterState");
 
-    // write the new on/off value
-    EmberAfStatus status =
-        emberAfWriteAttribute(1, ZCL_ON_OFF_CLUSTER_ID, ZCL_ON_OFF_ATTRIBUTE_ID, (uint8_t *) &newValue, ZCL_BOOLEAN_ATTRIBUTE_TYPE);
+    EmberAfStatus status = DoorLock::Attributes::LockState::Set(DOOR_LOCK_SERVER_ENDPOINT, newValue);
     if (status != EMBER_ZCL_STATUS_SUCCESS)
     {
-        ChipLogError(NotSpecified, "ERR: updating on/off %x", status);
+        ChipLogError(NotSpecified, "ERR: updating DoorLock %x", status);
     }
 }
