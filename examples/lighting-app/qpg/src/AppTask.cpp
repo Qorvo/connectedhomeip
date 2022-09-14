@@ -250,8 +250,15 @@ CHIP_ERROR AppTask::Init()
     // Init ZCL Data Model and start server
     PlatformMgr().ScheduleWork(InitServer, 0);
 
-    // Initialize device attestation config
+    ReturnErrorOnFailure(mFactoryDataProvider.Init());
+    SetDeviceInstanceInfoProvider(&mFactoryDataProvider);
+    SetCommissionableDataProvider(&mFactoryDataProvider);
+
+#if defined(CHIP_DEVICE_CONFIG_DEVICE_VENDOR_ID) && (CHIP_DEVICE_CONFIG_DEVICE_VENDOR_ID == 0xFFF1)
     SetDeviceAttestationCredentialsProvider(Examples::GetExampleDACProvider());
+#else
+    SetDeviceAttestationCredentialsProvider(&mFactoryDataProvider);
+#endif
 
     // Setup light
     err = LightingMgr().Init();
