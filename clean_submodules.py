@@ -21,7 +21,8 @@ min_matter_build_submodule_list = [
     "third_party/pigweed/repo",
     "third_party/qpg_sdk/repo",
     "third_party/zap/repo",
-    "third_party/jsoncpp/repo"
+    "third_party/jsoncpp/repo",
+    "third_party/nlfaultinjection/repo"
 ]
 
 def load_module_info() -> list:
