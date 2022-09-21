@@ -162,3 +162,24 @@ template("qpg_sdk") {
     }
   }
 }
+
+template("qpg_make_build") {
+  forward_variables_from(invoker,
+                         [
+                           "make_sources",
+                           "make_args",
+                           "make_output",
+                         ])
+  action(target_name) {
+    script = "${chip_root}/third_party/qpg_sdk/make.py"
+    sources = make_sources
+    outputs = make_output
+    args = [
+      "-s",
+
+      #use PATH variable lookup for compiler
+      "TOOLCHAIN=",
+    ]
+    args += make_args
+  }
+}
