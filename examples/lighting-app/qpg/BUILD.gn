@@ -155,30 +155,8 @@ group("default") {
   deps = [ ":qpg" ]
 }
 
-qpg_make_build("factorydata") {
-  make_sources = [ "${qpg_sdk_root}/Components/Qorvo" ]
-  make_output = [ "${target_gen_dir}/${qpg_sdk_lib_dir}/FactoryData/libFactoryData_example_base.a" ]
-  work_dir = rebase_path(target_gen_dir, root_build_dir) +
-             "/${qpg_sdk_lib_dir}/FactoryData"
-  make_args = [
-    "-f",
-    rebase_path(qpg_sdk_root, root_build_dir) +
-        "/Libraries/Qorvo/FactoryData/Makefile.FactoryData_example_base",
-    "WORKDIR=" + work_dir,
-    "Q_DAC_CERT=" + rebase_path(chip_root, root_build_dir) +
-        "/src/platform/qpg/examples/qorvo_dac_cert_0.der",
-    "Q_DAC_KEY=" + rebase_path(chip_root, root_build_dir) +
-        "/src/platform/qpg/examples/qorvo_dac_key_0.der",
-    "Q_PAI_CERT=" + rebase_path(chip_root, root_build_dir) +
-        "/src/platform/qpg/examples/qorvo_pai_cert.der",
-    "Q_CERTIFICATION_DECLARATION=" + rebase_path(chip_root, root_build_dir) +
-        "/src/platform/qpg/examples/qorvo_cd.bin",
-  ]
-}
-
 static_library("factorydata_lib") {
-  deps = [ ":factorydata" ]
-  libs = [ "${target_gen_dir}/${qpg_sdk_lib_dir}/FactoryData/libFactoryData_example_base.a" ]
+  libs = [ "${qpg_sdk_root}/Binaries/FactoryData/FactoryData_example/FactoryData_example.a" ]
   public_configs = [ ":qpg_retain_factorydata" ]
 }
 

@@ -21,6 +21,8 @@
 #include <platform/CommissionableDataProvider.h>
 #include <platform/DeviceInstanceInfoProvider.h>
 
+#include "qvCHIP.h"
+
 namespace chip {
 namespace DeviceLayer {
 
@@ -60,6 +62,9 @@ public:
 
     // ===== Members functions that are platform-specific
     CHIP_ERROR GetEnableKey(MutableByteSpan & enableKey);
+
+protected:
+    static CHIP_ERROR MapQorvoError(qvStatus_t aStatus);
 };
 
 } // namespace DeviceLayer

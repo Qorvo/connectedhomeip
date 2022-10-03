@@ -27,8 +27,8 @@
 
 #include <app-common/zap-generated/attribute-id.h>
 #include <app-common/zap-generated/attribute-type.h>
-#include <app-common/zap-generated/cluster-id.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
+#include <app-common/zap-generated/cluster-id.h>
 #include <app/server/Dnssd.h>
 #include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
@@ -42,6 +42,8 @@
 #include <setup_payload/QRCodeSetupPayloadGenerator.h>
 #include <setup_payload/SetupPayload.h>
 
+using namespace ::chip;
+using namespace ::chip::app;
 using namespace chip::TLV;
 using namespace chip::Credentials;
 using namespace chip::DeviceLayer;
@@ -55,6 +57,7 @@ using namespace chip::DeviceLayer;
 #define APP_TASK_STACK_SIZE (3 * 1024)
 #define APP_TASK_PRIORITY 2
 #define APP_EVENT_QUEUE_SIZE 10
+#define QPG_LOCK_ENDPOINT_ID (1)
 
 namespace {
 TaskHandle_t sAppTaskHandle;
@@ -141,11 +144,7 @@ CHIP_ERROR AppTask::Init()
     SetDeviceInstanceInfoProvider(&mFactoryDataProvider);
     SetCommissionableDataProvider(&mFactoryDataProvider);
 
-#if defined(CHIP_DEVICE_CONFIG_DEVICE_VENDOR_ID) && (CHIP_DEVICE_CONFIG_DEVICE_VENDOR_ID == 0xFFF1)
-    SetDeviceAttestationCredentialsProvider(Examples::GetExampleDACProvider());
-#else
     SetDeviceAttestationCredentialsProvider(&mFactoryDataProvider);
-#endif
 
     // Setup Bolt
     err = BoltLockMgr().Init();
