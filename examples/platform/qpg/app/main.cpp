@@ -74,7 +74,7 @@ constexpr int extDiscTimeoutSecs             = 20;
 CHIP_ERROR CHIP_Init(void);
 
 #if CHIP_DEVICE_CONFIG_ENABLE_OTA_REQUESTOR
-void InitOTARequestorHandler(System::Layer * systemLayer, void * appState)
+void InitOTARequestorHandler(void)
 {
     InitializeOTARequestor();
 }
@@ -116,13 +116,9 @@ void ChipEventHandler(const ChipDeviceEvent * aEvent, intptr_t /* arg */)
 {
     switch (aEvent->Type)
     {
-    case DeviceEventType::kThreadConnectivityChange:
+    case DeviceEventType::kDnssdPlatformInitialized:
 #if CHIP_DEVICE_CONFIG_ENABLE_OTA_REQUESTOR
-        if (aEvent->ThreadConnectivityChange.Result == kConnectivity_Established)
-        {
-            chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(kInitOTARequestorDelaySec),
-                                                        InitOTARequestorHandler, nullptr);
-        }
+        InitOTARequestorHandler();
 #endif
         break;
     default:
