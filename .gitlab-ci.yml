@@ -1,0 +1,195 @@
+stages:
+  - build
+  - deploy
+  - test
+
+variables:
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_RUNNER_ID/$CI_CONCURRENT_ID/$CI_PROJECT_NAME
+    GIT_DEPTH: 1
+    GIT_STRATEGY: clone
+
+build-docker-job:
+  image: docker:20.10.17-git
+  tags:
+    - ede-wcon
+  stage: build
+  rules:
+    - if: $BAKE_DOCKER == "true"
+      when: always
+  script:
+    - git submodule sync
+    - git submodule update --init --recursive -f
+    - git -C third_party/qpg_sdk/repo remote set-url origin https://gitlab-ci-token:$CI_JOB_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/p345_qmatter.git
+    - git -C third_party/qpg_sdk/repo remote set-branches origin Matter_DK_Endnodes_Libs-vlatest-nightly-stable
+    - git -C third_party/qpg_sdk/repo fetch origin
+    - git -C third_party/qpg_sdk/repo checkout origin/Matter_DK_Endnodes_Libs-vlatest-nightly-stable
+    - git -C third_party/qpg_sdk/repo log -1
+    - docker login -u gitlab-ci-token -p $P236_CHIP_PUSH_TOKEN $CI_REGISTRY
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/p236_chip .
+    - docker push $CI_REGISTRY/$CI_PROJECT_NAMESPACE/p236_chip
+
+
+deploy_docker_job:
+  image: docker:20.10.17-git
+  stage: deploy
+  parallel:
+    matrix:
+      - LOCATION: ede-wcon
+        RUNNER: ["001", "002", "003", "004", "005", "006"]
+  tags:
+    - ${LOCATION}-${RUNNER}
+  needs: ["build-docker-job"]
+  variables:
+    GIT_STRATEGY: none
+    GIT_SUBMODULE_STRATEGY: none
+  script:
+    - docker login -u gitlab-ci-token -p $P236_CHIP_PUSH_TOKEN $CI_REGISTRY
+    - docker pull $CI_REGISTRY/$CI_PROJECT_NAMESPACE/p236_chip
+  rules:
+    - if: $BAKE_DOCKER == "true"
+      when: always
+
+
+build-android-chiptool:
+  image: connectedhomeip/chip-build-android:latest
+  tags:
+    - ede-wcon
+  stage: deploy
+  only:
+    - triggers
+  before_script:
+    - ARTIFACTS_DIR=$(pwd)
+    - apt-get update
+    - apt-get install git-lfs
+  script:
+    - python3 ./clean_submodules.py
+    - git submodule sync
+    - git submodule update --init --recursive -f
+    - ./scripts/build/gn_bootstrap.sh
+    - source scripts/activate.sh
+    - ./scripts/run_in_build_env.sh \
+            "./scripts/build/build_examples.py --no-log-timestamps --target android-arm64-chip-tool build"
+  artifacts:
+    paths:
+      - "./out/android-arm64-chip-tool/outputs/apk/debug/*.apk"
+    expire_in: 2 days
+
+
+build-chip-apps-job:
+  image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/p236_chip:latest
+  tags:
+    - ede-wcon
+  stage: deploy
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_PIPELINE_SOURCE == "trigger" ||
+          $CI_PIPELINE_SOURCE == "web"
+      when: always
+  before_script:
+    - ARTIFACTS_DIR=$(pwd)
+  script:
+    - cd /root/repo
+    - git remote set-url origin https://gitlab-ci-token:$P236_CHIP_PUSH_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/P236_CHIP.git
+    - git fetch origin
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
+    - git submodule sync
+    - git submodule update --init --recursive -f
+    - git -C third_party/qpg_sdk/repo remote set-url origin https://gitlab-ci-token:$CI_JOB_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/P345_QMatter.git
+    - git -C third_party/qpg_sdk/repo remote set-branches origin Matter_DK_Endnodes_Libs-vlatest-nightly-stable
+    - git -C third_party/qpg_sdk/repo fetch origin
+    - git -C third_party/qpg_sdk/repo checkout origin/Matter_DK_Endnodes_Libs-vlatest-nightly-stable
+    - git -C third_party/qpg_sdk/repo log -1
+    - source scripts/activate.sh
+    - ./scripts/build/build_examples.py --target linux-arm64-ota-provider-ipv6only-no-ble-clang build
+    - ./scripts/build/build_examples.py --target linux-arm64-chip-tool-ipv6only-clang build
+    - ./scripts/build/build_examples.py --target linux-arm64-all-clusters-ipv6only-clang build
+    - ./scripts/build/build_examples.py --target linux-x64-ota-provider-ipv6only-no-ble build
+    - ./scripts/build/build_examples.py --target linux-x64-chip-tool-ipv6only build
+    - ./scripts/build/build_examples.py --target linux-x64-all-clusters-ipv6only build
+    - mkdir $ARTIFACTS_DIR/x64 $ARTIFACTS_DIR/arm64
+    - cp -v out/linux-arm64-chip-tool-ipv6only-clang/chip-tool $ARTIFACTS_DIR/arm64/
+    - cp -v out/linux-arm64-ota-provider-ipv6only-no-ble-clang/chip-ota-provider-app $ARTIFACTS_DIR/arm64/
+    - cp -v out/linux-arm64-all-clusters-ipv6only-clang/chip-all-clusters-app $ARTIFACTS_DIR/arm64/
+    - cp -v out/linux-x64-chip-tool-ipv6only/chip-tool $ARTIFACTS_DIR/x64/
+    - cp -v out/linux-x64-ota-provider-ipv6only-no-ble/chip-ota-provider-app $ARTIFACTS_DIR/x64/
+    - cp -v out/linux-x64-all-clusters-ipv6only/chip-all-clusters-app $ARTIFACTS_DIR/x64/
+    - cd $ARTIFACTS_DIR
+
+  artifacts:
+    paths:
+      - "x64"
+      - "arm64"
+    expire_in: 2 days
+
+
+build-qpg-app:
+  image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/p236_chip:latest
+  tags:
+    - ede-wcon
+  stage: deploy
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_PIPELINE_SOURCE == "trigger" ||
+          $CI_PIPELINE_SOURCE == "web"
+      when: always
+  before_script:
+    - ARTIFACTS_DIR=$(pwd)
+  script:
+    - cd /root/repo
+    - git remote set-url origin https://gitlab-ci-token:$P236_CHIP_PUSH_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/P236_CHIP.git
+    - git fetch origin
+    - git reset --hard origin/$CI_COMMIT_REF_NAME
+    - git submodule sync
+    - git submodule update --init --recursive -f
+    - git -C third_party/qpg_sdk/repo remote set-url origin https://gitlab-ci-token:$CI_JOB_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/P345_QMatter.git
+    - git -C third_party/qpg_sdk/repo remote set-branches origin Matter_DK_Endnodes_Libs-vlatest-nightly-stable
+    - git -C third_party/qpg_sdk/repo fetch origin
+    - git -C third_party/qpg_sdk/repo checkout origin/Matter_DK_Endnodes_Libs-vlatest-nightly-stable
+    - git -C third_party/qpg_sdk/repo log -1
+    - source scripts/activate.sh
+    - export CHIP_ROOT=$(pwd)
+    - env
+    - ./scripts/build/build_examples.py --target qpg-qpg6105-light build
+    - ./scripts/build/build_examples.py --target qpg-qpg6105-lock build
+    - ./scripts/build/build_examples.py --target qpg-qpg6105-shell build
+    - cp -v out/qpg-qpg6105-light/chip-*.hex $ARTIFACTS_DIR
+    - cp -v out/qpg-qpg6105-light/chip-*.ota $ARTIFACTS_DIR || true
+    - cp -v out/qpg-qpg6105-lock/chip-*.hex $ARTIFACTS_DIR
+    - cp -v out/qpg-qpg6105-lock/chip-*.ota $ARTIFACTS_DIR || true
+    - cp -v out/qpg-qpg6105-shell/chip-*.hex $ARTIFACTS_DIR
+    - cd $ARTIFACTS_DIR
+
+  artifacts:
+    paths:
+      - "chip-*.hex"
+      - "chip-*.ota"
+    expire_in: 2 days
+
+test-qpg-app:
+  image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/p236_chip:latest
+  tags:
+    - ede-wcon
+  stage: test
+  needs: ["build-chip-apps-job", "build-qpg-app"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_PIPELINE_SOURCE == "trigger" ||
+          $CI_PIPELINE_SOURCE == "web"
+      when: on_success
+  variables:
+    TEST_BRANCH: "master"
+    NIGHTLY_RUN: "false"
+    TEST_LIST: "TC_ACL_2_10 TC_CADMIN_1_19 TC_G_2_3"
+    CURL_QPG_APPS_JOB_URL: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_COMMIT_BRANCH/download?job=build-qpg-app"
+    CURL_CHIP_APPS_JOB_URL: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_COMMIT_BRANCH/download?job=build-chip-apps-job"
+  script:
+    - 'curl -X POST --fail
+    --form token=$CI_JOB_TOKEN
+    --form ref=$TEST_BRANCH $CI_API_V4_URL/projects/$MATTER_TEST_TOOL_PROJECT_ID/trigger/pipeline
+    --form "variables[CURL_QPG_APPS_JOB_URL]=$CURL_QPG_APPS_JOB_URL"
+    --form "variables[CURL_CHIP_APPS_JOB_URL]=$CURL_CHIP_APPS_JOB_URL"
+    --form "variables[TEST_LIST]=$TEST_LIST"
+    --form "variables[ARTIFACTS_COMMIT_SHA]=$CI_COMMIT_SHA"
+    --form "variables[TRIGGER_SOURCE]=$CI_PROJECT_NAME"
+    --form "variables[NIGHTLY_RUN]=$NIGHTLY_RUN"
+    '
