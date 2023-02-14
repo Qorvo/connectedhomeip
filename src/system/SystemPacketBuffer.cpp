@@ -493,6 +493,7 @@ PacketBufferHandle PacketBufferHandle::New(size_t aAvailableSize, uint16_t aRese
     {
         PacketBuffer::sFreeList = lPacket->ChainedBuffer();
         SYSTEM_STATS_INCREMENT(chip::System::Stats::kSystemLayer_NumPacketBufs);
+        ChipLogProgress(NotSpecified, "PacketBuffers high watermark: %d", chip::System::Stats::GetHighWatermarks()[chip::System::Stats::kSystemLayer_NumPacketBufs]);
     }
 
     UNLOCK_BUF_POOL();
