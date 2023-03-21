@@ -83,7 +83,8 @@ build-chip-apps-job:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule" ||
           $CI_PIPELINE_SOURCE == "trigger" ||
-          $CI_PIPELINE_SOURCE == "web"
+          $CI_PIPELINE_SOURCE == "web" ||
+          $CI_PIPELINE_SOURCE == "merge_request_event" 
       when: always
   before_script:
     - ARTIFACTS_DIR=$(pwd)
@@ -130,7 +131,8 @@ build-qpg-app:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule" ||
           $CI_PIPELINE_SOURCE == "trigger" ||
-          $CI_PIPELINE_SOURCE == "web"
+          $CI_PIPELINE_SOURCE == "web" ||
+          $CI_PIPELINE_SOURCE == "merge_request_event" 
       when: always
   before_script:
     - ARTIFACTS_DIR=$(pwd)
@@ -182,6 +184,33 @@ test-qpg-app:
     TEST_LIST: "TC_ACL_2_10 TC_CADMIN_1_19 TC_G_2_3"
     CURL_QPG_APPS_JOB_URL: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_COMMIT_BRANCH/download?job=build-qpg-app"
     CURL_CHIP_APPS_JOB_URL: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_COMMIT_BRANCH/download?job=build-chip-apps-job"
+  script:
+    - 'curl -X POST --fail
+    --form token=$CI_JOB_TOKEN
+    --form ref=$TEST_BRANCH $CI_API_V4_URL/projects/$MATTER_TEST_TOOL_PROJECT_ID/trigger/pipeline
+    --form "variables[CURL_QPG_APPS_JOB_URL]=$CURL_QPG_APPS_JOB_URL"
+    --form "variables[CURL_CHIP_APPS_JOB_URL]=$CURL_CHIP_APPS_JOB_URL"
+    --form "variables[TEST_LIST]=$TEST_LIST"
+    --form "variables[ARTIFACTS_COMMIT_SHA]=$CI_COMMIT_SHA"
+    --form "variables[TRIGGER_SOURCE]=$CI_PROJECT_NAME"
+    --form "variables[NIGHTLY_RUN]=$NIGHTLY_RUN"
+    '
+
+test-mr:
+  image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/p236_chip:latest
+  tags:
+    - ede-wcon
+  stage: test
+  needs: ["build-chip-apps-job", "build-qpg-app"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" 
+      when: on_success
+  variables:
+    TEST_BRANCH: "master"
+    NIGHTLY_RUN: "false"
+    TEST_LIST: "TC_CADMIN_1_19 TC_G_2_3"
+    CURL_QPG_APPS_JOB_URL: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_MERGE_REQUEST_REF_PATH/download?job=build-qpg-app"
+    CURL_CHIP_APPS_JOB_URL: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_MERGE_REQUEST_REF_PATH/download?job=build-chip-apps-job"
   script:
     - 'curl -X POST --fail
     --form token=$CI_JOB_TOKEN
