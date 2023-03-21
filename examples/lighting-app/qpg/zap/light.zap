@@ -1,5 +1,5 @@
 {
-  "featureLevel": 92,
+  "featureLevel": 94,
   "creator": "zap",
   "keyValuePairs": [
     {
@@ -17,16 +17,16 @@
   ],
   "package": [
     {
-      "pathRelativity": "relativeToZap",
-      "path": "../../../../src/app/zap-templates/zcl/zcl.json",
+      "pathRelativity": "resolveEnvVars",
+      "path": "$CHIP_ROOT/src/app/zap-templates/zcl/zcl.json",
       "type": "zcl-properties",
       "category": "matter",
       "version": 1,
       "description": "Matter SDK ZCL data"
     },
     {
-      "pathRelativity": "relativeToZap",
-      "path": "../../../../src/app/zap-templates/app-templates.json",
+      "pathRelativity": "resolveEnvVars",
+      "path": "$CHIP_ROOT/src/app/zap-templates/app-templates.json",
       "type": "gen-templates-json",
       "version": "chip-v1"
     }
@@ -1088,7 +1088,7 @@
               "mfgCode": null,
               "side": "server",
               "type": "array",
-              "included": 0,
+              "included": 1,
               "storageOption": "External",
               "singleton": 0,
               "bounded": 0,
@@ -2211,7 +2211,7 @@
               "code": 0,
               "mfgCode": null,
               "side": "server",
-              "type": "HourFormatEnum",
+              "type": "HourFormat",
               "included": 1,
               "storageOption": "NVM",
               "singleton": 0,
@@ -2227,7 +2227,7 @@
               "code": 1,
               "mfgCode": null,
               "side": "server",
-              "type": "CalendarTypeEnum",
+              "type": "CalendarType",
               "included": 1,
               "storageOption": "NVM",
               "singleton": 0,
@@ -2309,7 +2309,7 @@
               "code": 0,
               "mfgCode": null,
               "side": "server",
-              "type": "TempUnitEnum",
+              "type": "TempUnit",
               "included": 0,
               "storageOption": "NVM",
               "singleton": 0,
