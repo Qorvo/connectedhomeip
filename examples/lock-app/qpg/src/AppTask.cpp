@@ -519,12 +519,27 @@ void AppTask::UpdateClusterState(void)
 
     ChipLogProgress(NotSpecified, "UpdateClusterState");
 
-    EmberAfStatus status = DoorLock::Attributes::LockState::Set(QPG_LOCK_ENDPOINT_ID, newValue);
+    SystemLayer().ScheduleLambda([newValue] {
+        chip::app::DataModel::Nullable<chip::app::Clusters::DoorLock::DlLockState> currentLockState;
+        chip::app::Clusters::DoorLock::Attributes::LockState::Get(QPG_LOCK_ENDPOINT_ID, currentLockState);
 
-    if (status != EMBER_ZCL_STATUS_SUCCESS)
-    {
-        ChipLogError(NotSpecified, "ERR: updating DoorLock %x", status);
-    }
+        if (currentLockState.IsNull())
+        {
+            EmberAfStatus status = DoorLock::Attributes::LockState::Set(QPG_LOCK_ENDPOINT_ID, newValue);
+            if (status != EMBER_ZCL_STATUS_SUCCESS)
+            {
+                ChipLogError(NotSpecified, "ERR: updating DoorLock %x", status);
+            }
+        }
+        else
+        {
+            ChipLogProgress(NotSpecified, "Updating LockState attribute");
+            if (!DoorLockServer::Instance().SetLockState(QPG_LOCK_ENDPOINT_ID, newValue))
+            {
+                ChipLogError(NotSpecified, "ERR: updating DoorLock");
+            }
+        }
+    });
 }
 
 void AppTask::UpdateLEDs(void)
