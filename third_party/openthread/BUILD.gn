@@ -21,7 +21,10 @@ group("openthread-platform") {
 
 group("openthread") {
   if (chip_openthread_target != "") {
-    public_deps = [ chip_openthread_target ]
+    public_deps = [
+      chip_openthread_target,
+      "${openthread_root}/include/openthread",
+    ]
   } else {
     if (chip_openthread_ftd) {
       public_deps = [ "${openthread_root}:libopenthread-ftd" ]

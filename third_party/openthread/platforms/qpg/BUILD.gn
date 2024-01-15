@@ -21,6 +21,7 @@ import("${qpg_sdk_build_root}/qpg_sdk.gni")
 # QPGxxxx settings and OT glue code
 openthread_qpg_family = "${qpg_target_ic}"
 openthread_qpg_root = "${chip_root}/third_party/openthread/ot-qorvo"
+qpg_use_cli = true
 
 config("openthread_qpg_config") {
   include_dirs = [ "${openthread_qpg_root}/src/${openthread_qpg_family}" ]
@@ -58,11 +59,14 @@ source_set("libopenthread-qpg") {
 
   include_dirs = [ "${openthread_qpg_root}/src/${openthread_qpg_family}" ]
 
-  sources += [
-    "${openthread_root}/examples/apps/cli/cli_uart.cpp",
-    "${openthread_root}/src/cli/cli_config.h",
-  ]
-  include_dirs += [ "${openthread_root}/examples/apps" ]
+  if(qpg_use_cli)
+  {
+    sources += [
+      "${openthread_root}/examples/apps/cli/cli_uart.cpp",
+      "${openthread_root}/src/cli/cli_config.h",
+    ]
+    include_dirs += [ "${openthread_root}/examples/apps" ]
+  }
 
   public_deps = [
     ":openthread_core_config_qpg",
