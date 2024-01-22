@@ -61,7 +61,7 @@ jobs:
               run: scripts/checkout_submodules.py --shallow --platform linux
 
             - name: Bootstrap cache
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               timeout-minutes: 10
               if: ${{ !env.ACT }}
               with:
@@ -83,7 +83,7 @@ jobs:
               id: cirque-bootstrap-cache-key
               run: echo "val=$(scripts/tests/cirque_tests.sh cachekeyhash)" >> $GITHUB_OUTPUT
             - name: Cirque Bootstrap cache
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               timeout-minutes: 10
               if: ${{ !env.ACT }}
               with:
